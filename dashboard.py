@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 import plotly.express as px
 import folium
-from streamlit-folium import st_folium
+import streamlit_folium as st_folium
 
 # Dashboard Title
 st.title("TfL Bus Delay Prediction Dashboard")
@@ -69,4 +69,5 @@ fig2 = px.bar(importance_df, x='Feature', y='Importance', title="Feature Importa
 st.plotly_chart(fig2)
 
 st.info("This dashboard can be embedded into rethinktransport.co.uk via iframe or deployed as a subdomain. TfL API integration can be added for live data.")
+
 
