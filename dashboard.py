@@ -5,31 +5,37 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 import plotly.express as px
+import folium
+from streamlit_folium import st_folium
 
 # Dashboard title
 st.title("TfL Bus Delay Prediction Dashboard")
 
-# Simulated list of bus stops (in real case, fetch from TfL API)
+# Simulated bus stops with coordinates
 bus_stops = {
-    "Trafalgar Square": "490008660N",
-    "Oxford Circus": "490000254W",
-    "Victoria Station": "490000091A",
-    "Liverpool Street": "490000235Z"
+    "Trafalgar Square": [51.5080, -0.1281],
+    "Oxford Circus": [51.5154, -0.1410],
+    "Victoria Station": [51.4952, -0.1439],
+    "Liverpool Street": [51.5175, -0.0824]
 }
 
 # User selects a bus stop
-selected_stop = st.selectbox("Select a Bus Stop:", list(bus_stops.keys()))
+selected_stop = st.selectbox("Select a bus stop:", list(bus_stops.keys()))
 
-# Simulate fetching data for selected stop (in real case, use TfL API)
-st.subheader(f"Delay Prediction for: {selected_stop}")
-np.random.seed(hash(selected_stop) % 123456)  # simulate different data per stop
+# Show map with selected bus stop
+location = bus_stops[selected_stop]
+map = folium.Map(location=location, zoom_start=15)
+folium.Marker(location=location, popup=selected_stop).add_to(map)
+st.subheader("Bus Stop Location")
+st_folium(map, width=700, height=400)
 
+# Simulate data based on selected stop
+np.random.seed(42)
 data = pd.DataFrame({
     'hour': np.random.randint(6, 22, 100),
     'traffic_level': np.random.randint(1, 5, 100),
     'is_raining': np.random.randint(0, 2, 100),
 })
-
 data['delay_minutes'] = (
     data['hour'] * 0.1 +
     data['traffic_level'] * 2 +
@@ -37,31 +43,23 @@ data['delay_minutes'] = (
     np.random.normal(0, 1, 100)
 )
 
-# Features and target
+# Train model
 X = data[['hour', 'traffic_level', 'is_raining']]
 y = data['delay_minutes']
-
-# Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Train Random Forest model
 model = RandomForestRegressor(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
-
-# Predictions
 predictions = model.predict(X_test)
 
-# Calculate MSE
+# Show metrics and plots
 mse = mean_squared_error(y_test, predictions)
 st.metric("Mean Squared Error (MSE)", f"{mse:.2f}")
 
-# Plot Actual vs Predicted
 fig1 = px.scatter(x=y_test, y=predictions,
                   labels={'x': 'Actual Delay', 'y': 'Predicted Delay'},
                   title="Actual vs Predicted Bus Delay")
 st.plotly_chart(fig1)
 
-# Feature Importance
 importance = model.feature_importances_
 features = X.columns
 importance_df = pd.DataFrame({'Feature': features, 'Importance': importance})
