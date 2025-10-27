@@ -8,10 +8,10 @@ import plotly.express as px
 import folium
 from streamlit_folium import st_folium
 
-# Dashboard title
+# Dashboard Title
 st.title("TfL Bus Delay Prediction Dashboard")
 
-# Simulated bus stops with coordinates
+# Simulated bus stops with coordinates (replace with TfL API for real data)
 bus_stops = {
     "Trafalgar Square": [51.5080, -0.1281],
     "Oxford Circus": [51.5154, -0.1410],
@@ -29,8 +29,8 @@ folium.Marker(location=location, popup=selected_stop).add_to(map)
 st.subheader("Bus Stop Location")
 st_folium(map, width=700, height=400)
 
-# Simulate data based on selected stop
-np.random.seed(42)
+# Simulate data for selected stop (replace with TfL API data later)
+np.random.seed(hash(selected_stop) % 123456)
 data = pd.DataFrame({
     'hour': np.random.randint(6, 22, 100),
     'traffic_level': np.random.randint(1, 5, 100),
@@ -43,7 +43,7 @@ data['delay_minutes'] = (
     np.random.normal(0, 1, 100)
 )
 
-# Train model
+# Train Random Forest model
 X = data[['hour', 'traffic_level', 'is_raining']]
 y = data['delay_minutes']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -51,17 +51,21 @@ model = RandomForestRegressor(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 predictions = model.predict(X_test)
 
-# Show metrics and plots
+# Show metrics
 mse = mean_squared_error(y_test, predictions)
 st.metric("Mean Squared Error (MSE)", f"{mse:.2f}")
 
+# Plot Actual vs Predicted
 fig1 = px.scatter(x=y_test, y=predictions,
                   labels={'x': 'Actual Delay', 'y': 'Predicted Delay'},
                   title="Actual vs Predicted Bus Delay")
 st.plotly_chart(fig1)
 
+# Feature Importance
 importance = model.feature_importances_
 features = X.columns
 importance_df = pd.DataFrame({'Feature': features, 'Importance': importance})
 fig2 = px.bar(importance_df, x='Feature', y='Importance', title="Feature Importance Analysis")
 st.plotly_chart(fig2)
+
+st.info("This dashboard can be embedded into rethinktransport.co.uk via iframe or deployed as a subdomain. TfL API integration can be added for live data.")
