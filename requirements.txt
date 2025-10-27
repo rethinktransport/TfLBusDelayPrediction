@@ -4,5 +4,6 @@ numpy
 scikit-learn
 plotly
 folium
-streamlit_folium
+streamlit-folium
+
 
